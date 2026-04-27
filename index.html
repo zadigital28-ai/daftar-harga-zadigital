@@ -222,9 +222,15 @@
     .social-link img{width:20px;height:20px;filter:invert(60%) sepia(10%) saturate(400%) hue-rotate(180deg);transition:filter var(--transition)}
     .social-link:hover img{filter:invert(70%) sepia(60%) saturate(600%) hue-rotate(150deg)}
     [data-theme="light"] .social-link img{filter:invert(20%) sepia(20%) saturate(400%) hue-rotate(200deg)}
+    /* WA icon gets green tint */
+    .social-link-wa img{filter:invert(55%) sepia(80%) saturate(400%) hue-rotate(90deg) brightness(0.9)}
+    .social-link-wa:hover{border-color:#25d366}
+    .social-link-wa:hover img{filter:invert(60%) sepia(90%) saturate(500%) hue-rotate(90deg)}
     .footer-wa{display:flex;align-items:center;gap:10px;padding:10px 20px;border-radius:50px;background:#25d366;color:#fff;font-family:var(--font-display);font-weight:700;font-size:0.9rem;transition:all var(--transition)}
     .footer-wa:hover{transform:translateY(-2px);box-shadow:0 4px 16px rgba(37,211,102,0.4)}
     .footer-copy{font-size:0.78rem;color:var(--color-text-muted);text-align:center}
+    /* Testimoni outer wrapper keeps nav outside scrollable area */
+    .testi-outer{display:flex;flex-direction:column;gap:0}
 
     /* SCROLL TOP */
     #scroll-top{position:fixed;bottom:24px;right:20px;z-index:200;width:40px;height:40px;border-radius:50%;background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-text-muted);display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all var(--transition);opacity:0;visibility:hidden}
@@ -418,8 +424,10 @@
     <div class="section-divider"></div>
     <h2 class="section-title">Apa Kata Mereka?</h2>
     <p class="section-sub">Ribuan pelanggan sudah merasakan manfaatnya.</p>
-    <div class="testi-track-wrap">
-      <div class="testi-track" id="testi-track"></div>
+    <div class="testi-outer">
+      <div class="testi-track-wrap">
+        <div class="testi-track" id="testi-track"></div>
+      </div>
       <div class="testi-nav">
         <button class="testi-nav-btn" onclick="scrollTesti(-1)">&#8592;</button>
         <button class="testi-nav-btn" onclick="scrollTesti(1)">&#8594;</button>
@@ -445,10 +453,8 @@
       <span class="footer-name" id="footer-brand-name">Zadigital</span>
     </div>
     <div class="footer-socials" id="footer-socials"></div>
-    <a id="footer-wa" href="https://wa.me/6285385535252" class="footer-wa" target="_blank" rel="noopener">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.558 4.14 1.535 5.878L.057 23.75a.5.5 0 00.61.636l6.054-1.43A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.93 0-3.74-.518-5.29-1.42l-.38-.224-3.935.929.972-3.846-.246-.397A9.938 9.938 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
-      Chat WhatsApp
-    </a>
+    <!-- WA icon now rendered inside footer-socials by JS -->
+    <a id="footer-wa" href="https://wa.me/6285385535252" style="display:none" aria-hidden="true"></a>
     <p class="footer-copy" id="footer-copy">© 2025 Zadigital. All rights reserved.</p>
   </div>
 </footer>
@@ -588,41 +594,55 @@ async function fetchCSV(url,key){
 
 // ===== BRANDING =====
 function applyBranding(data){
-  data.forEach(r=>{const k=(r.key||'').trim();const v=(r.value||'').trim();if(k)branding[k]=v});
+  // Store all keys lowercase for consistent lookup
+  data.forEach(r=>{
+    const k=(r.key||'').trim().toLowerCase();
+    const v=(r.value||'').trim();
+    if(k) branding[k]=v;
+  });
   applyColors();
 
   const name=branding.brand_name||'Zadigital';
   document.title=name+' — Jasa Sosial Media';
   setText('nav-brand-name',name);setText('footer-brand-name',name);setText('loading-brand-name',name);
-  if(branding.hero_title)setText('hero-title',branding.hero_title);
-  if(branding.hero_subtitle)setText('hero-subtitle',branding.hero_subtitle);
-  if(branding.info_title)setText('info-title',branding.info_title);
-  if(branding.info_body)setText('info-body',branding.info_body);
-  if(branding.footer_text)setText('footer-copy',branding.footer_text);
+  if(branding.hero_title)    setText('hero-title',branding.hero_title);
+  if(branding.hero_subtitle) setText('hero-subtitle',branding.hero_subtitle);
+  if(branding.info_title)    setText('info-title',branding.info_title);
+  if(branding.info_body)     setText('info-body',branding.info_body);
+  if(branding.footer_text)   setText('footer-copy',branding.footer_text);
 
+  // Logo
   if(branding.logo_url){
     ['nav-logo','footer-logo'].forEach(id=>{
       const el=document.getElementById(id);
-      if(el){el.src=branding.logo_url;el.style.display='block'}
+      if(el){el.src=branding.logo_url;el.style.display='block';}
     });
   }
 
+  // WA number — update both footer link and cart order link
   const waNum=branding.wa_number||WA_DEFAULT;
   const waEl=document.getElementById('footer-wa');
-  if(waEl)waEl.href='https://wa.me/'+waNum;
+  if(waEl) waEl.href='https://wa.me/'+waNum;
 
+  // Popup promo — key: pop_up
   if(branding.pop_up){
+    const overlay=document.getElementById('popup-overlay');
     const img=document.getElementById('popup-img');
-    if(img){img.src=branding.pop_up;img.onload=()=>document.getElementById('popup-overlay').classList.add('active')}
+    if(img&&overlay){
+      img.onload=()=>overlay.classList.add('active');
+      img.onerror=()=>{};
+      img.src=branding.pop_up;
+    }
   }
 
+  // Catatan
   if(branding.catatan){
     const sec=document.getElementById('catatan');
     const box=document.getElementById('catatan-box');
-    if(sec&&box){sec.style.display='';box.innerHTML=branding.catatan}
+    if(sec&&box){sec.style.display='';box.innerHTML=branding.catatan;}
   }
 
-  // Bonus images
+  // Bonus images — keys: bonus_1, bonus_2, bonus_3 (case-insensitive, stored lowercase)
   const bonusUrls=['bonus_1','bonus_2','bonus_3'].map(k=>branding[k]).filter(Boolean);
   if(bonusUrls.length){
     const sec=document.getElementById('bonus');
@@ -638,10 +658,22 @@ function applyBranding(data){
     }
   }
 
-  // Footer socials with real icons
+  // Footer socials — WA icon included here, regular footer-wa link hidden
   const socialsEl=document.getElementById('footer-socials');
   if(socialsEl){
     socialsEl.innerHTML='';
+    // Add WA as icon button (always shown if wa_number exists)
+    const waNum2=branding.wa_number||WA_DEFAULT;
+    const waIcon=document.createElement('a');
+    waIcon.href='https://wa.me/'+waNum2;
+    waIcon.target='_blank';waIcon.rel='noopener';
+    waIcon.className='social-link social-link-wa';waIcon.title='WhatsApp';
+    const waImg=document.createElement('img');
+    waImg.src='https://cdn.jsdelivr.net/npm/simple-icons@9/icons/whatsapp.svg';
+    waImg.alt='WhatsApp';waImg.width=20;waImg.height=20;
+    waIcon.appendChild(waImg);socialsEl.appendChild(waIcon);
+
+    // Other social links from sheet
     Object.entries(SOCIAL_DEFS).forEach(([key,info])=>{
       if(branding[key]){
         const a=document.createElement('a');
@@ -657,19 +689,31 @@ function applyBranding(data){
 
 function applyColors(){
   const dark=document.documentElement.getAttribute('data-theme')==='dark';
-  const set=(p,v)=>{if(v)document.documentElement.style.setProperty(p,v);else document.documentElement.style.removeProperty(p)};
+  // Helper: set CSS var if value exists, remove override if not (falls back to :root default)
+  const set=(p,v)=>{
+    if(v&&v.trim()) document.documentElement.style.setProperty(p,v.trim());
+    else document.documentElement.style.removeProperty(p);
+  };
   if(dark){
-    set('--color-bg',branding.color_dark_bg||branding.color_default||null);
-    set('--color-surface',branding.color_dark_surface||null);
-    set('--color-accent',branding.color_dark_accent||branding.color_accent||null);
-    set('--color-text',branding.color_dark_text||branding.color_accent||null);
-    set('--color-secondary',branding.color_secondary||null);
-  }else{
-    set('--color-bg',branding.color_light_bg||null);
-    set('--color-surface',branding.color_light_surface||null);
-    set('--color-accent',branding.color_light_accent||branding.color_secondary||null);
-    set('--color-text',branding.color_light_text||branding.color_default||null);
-    set('--color-secondary',branding.color_default||null);
+    set('--color-bg',      branding.color_dark_bg      || branding.color_default   || '');
+    set('--color-surface', branding.color_dark_surface || '');
+    set('--color-surface2',branding.color_dark_surface ? branding.color_dark_surface : '');
+    set('--color-accent',  branding.color_dark_accent  || branding.color_accent     || '');
+    set('--color-secondary',branding.color_secondary   || '');
+    set('--color-text',    branding.color_dark_text    || branding.color_accent     || '');
+    set('--color-text-muted', '');
+    set('--color-border',  '');
+    set('--color-overlay', '');
+  } else {
+    set('--color-bg',      branding.color_light_bg      || '');
+    set('--color-surface', branding.color_light_surface || '');
+    set('--color-surface2',branding.color_light_surface || '');
+    set('--color-accent',  branding.color_light_accent  || branding.color_secondary || '');
+    set('--color-secondary',branding.color_default      || '');
+    set('--color-text',    branding.color_light_text    || branding.color_default   || '');
+    set('--color-text-muted', '');
+    set('--color-border',  '');
+    set('--color-overlay', '');
   }
 }
 function setText(id,t){const e=document.getElementById(id);if(e)e.textContent=t}
@@ -873,18 +917,26 @@ function buildTestimoni(data){
   section.addEventListener('mouseleave',()=>track.classList.remove('paused'));
 }
 
-// Testimoni manual scroll — pauses animation and scrolls container
+// Testimoni manual scroll — shifts CSS animation offset on the track
 function scrollTesti(dir){
   const track=document.getElementById('testi-track');
   if(!track)return;
-  // Pause auto-scroll
+  // Get current animation offset via matrix transform
+  if(!window._testiManualOffset) window._testiManualOffset=0;
+  window._testiManualOffset+=dir*316;
+  // Apply as margin-left shift (negative shifts left/forward)
+  track.style.marginLeft=(-window._testiManualOffset)+'px';
+  track.style.transition='margin-left 0.4s ease';
+  setTimeout(()=>{track.style.transition=''},450);
+  // Pause then resume auto-scroll
   track.classList.add('paused');
-  // Scroll by one card width (300px card + 16px gap)
-  const wrap=track.parentElement;
-  wrap.scrollBy({left:dir*316,behavior:'smooth'});
-  // Resume auto-scroll after 4 seconds of inactivity
   clearTimeout(window._testiResumeTimer);
-  window._testiResumeTimer=setTimeout(()=>track.classList.remove('paused'),4000);
+  window._testiResumeTimer=setTimeout(()=>{
+    // Reset manual offset to avoid drift
+    window._testiManualOffset=0;
+    track.style.marginLeft='';
+    track.classList.remove('paused');
+  },5000);
 }
 
 // ===== SKELETON =====
