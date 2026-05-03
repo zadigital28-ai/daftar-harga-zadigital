@@ -787,6 +787,13 @@ function applyColors(){
 }
 function setText(id,t){const e=document.getElementById(id);if(e)e.textContent=t}
 
+// ===== UTILS =====
+const esc = s => {
+  const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'};
+  return (s||'').toString().replace(/[&<>"']/g, m => map[m]);
+};
+const fmtRp = n => 'Rp ' + parseInt(n||0).toLocaleString('id-ID');
+
 // ===== SERVICES =====
 function buildServices(data){
   allServices=data.map((r,i)=>({
