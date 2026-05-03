@@ -1150,7 +1150,7 @@ function buildFAQ(data){
 
 // ===== INIT =====
 async function init(){
-  initTheme();showSkeletons();updateCartUI();
+  initTheme();updateCartUI();
   try{
     const[bData,sData,tData,fData]=await Promise.all([
       fetchCSV(CSV_BRANDING,'zd_branding'),
