@@ -582,24 +582,45 @@ let branding={}, allServices=[], filteredServices=[], cart=[], faqData=[];
 let currentPlatform='semua', currentPage=1, searchQuery='';
 
 // ===== CSV =====
-function parseCSVLine(line){
-  const r=[];let c='';let q=false;
-  for(let i=0;i<line.length;i++){
-    const ch=line[i];
-    if(ch==='"'){q=!q}
-    else if(ch===','&&!q){r.push(c);c=''}
-    else{c+=ch}
-  }
-  r.push(c);return r;
-}
 function parseCSV(text){
   text = text.replace(/^\uFEFF/, '');
-  const lines=text.trim().split(/\r?\n/);
+  const lines = [];
+  let currentLine = [];
+  let currentCell = '';
+  let insideQuotes = false;
+  
+  for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      const nextChar = text[i + 1];
+      if (char === '"' && nextChar === '"') {
+          currentCell += '"';
+          i++;
+      } else if (char === '"') {
+          insideQuotes = !insideQuotes;
+      } else if (char === ',' && !insideQuotes) {
+          currentLine.push(currentCell);
+          currentCell = '';
+      } else if ((char === '\n' || (char === '\r' && nextChar === '\n')) && !insideQuotes) {
+          if (char === '\r') i++;
+          currentLine.push(currentCell);
+          lines.push(currentLine);
+          currentLine = [];
+          currentCell = '';
+      } else {
+          currentCell += char;
+      }
+  }
+  if (currentCell !== '' || currentLine.length > 0) {
+      currentLine.push(currentCell);
+      lines.push(currentLine);
+  }
+  
   if(lines.length<2)return[];
-  const headers=parseCSVLine(lines[0]).map(h=>h.trim().toLowerCase().replace(/\s+/g,'_'));
+  
+  const headers=lines[0].map(h=>h.trim().toLowerCase().replace(/\s+/g,'_'));
   const out=[];
   for(let i=1;i<lines.length;i++){
-    const vals=parseCSVLine(lines[i]);
+    const vals=lines[i];
     const obj={};
     headers.forEach((h,idx)=>{obj[h]=(vals[idx]||'').trim()});
     if(Object.values(obj).some(v=>v))out.push(obj);
@@ -1130,6 +1151,17 @@ async function init(){
       fetchCSV(CSV_TESTI,'zd_testi'),
       fetchCSV(CSV_FAQ,'zd_faq'),
     ]);
+    
+    let failedSheets = [];
+    if(!bData.length) failedSheets.push("Branding");
+    if(!sData.length) failedSheets.push("Data Layanan");
+    if(!tData.length) failedSheets.push("Testimoni");
+    if(!fData.length) failedSheets.push("FAQ");
+    
+    if(failedSheets.length > 0) {
+        alert("Peringatan: Gagal memuat data dari sheet berikut: " + failedSheets.join(", ") + ".\n\nPastikan link sudah benar dan telah di-Publish ke Web sebagai CSV.");
+    }
+
     if(bData.length)applyBranding(bData);
     if(sData.length)buildServices(sData);
     else document.getElementById('services-grid').innerHTML='<div class="no-results">Gagal memuat data (Versi Terbaru). Pastikan koneksi lancar dan coba refresh halaman.</div>';
